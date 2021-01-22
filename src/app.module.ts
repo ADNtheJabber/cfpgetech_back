@@ -11,10 +11,13 @@ import { ProfilModule } from './profil/profil.module';
 import { AdministrateurModule } from './administrateur/administrateur.module';
 import { RoleModule } from './role/role.module';
 import { AdresseModule } from './adresse/adresse.module';
-import { FormationModule } from './formation/formation.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Connection } from 'typeorm';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    TypeOrmModule.forRoot(),
     UsersModule, 
     DivisionModule, 
     DepartementModule, 
@@ -24,9 +27,11 @@ import { FormationModule } from './formation/formation.module';
     ProfilModule, 
     AdministrateurModule, 
     RoleModule, 
-    AdresseModule, 
-    FormationModule],
+    AdresseModule, AuthModule, 
+    ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private connection: Connection) {}
+}

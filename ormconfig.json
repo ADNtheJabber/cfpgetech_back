@@ -5,6 +5,17 @@
     "username": "root",
     "password": "",
     "database": "cfpmobile",
-    "entities": ["src/**/**.entity{.ts,.js}"],
-    "synchronize": true
+    "logging": false,
+    "migrationTableName": "migrations",
+    "entities": [
+      "dist/**/*.entity.js"
+    ],
+    "synchronize": true,
+    "migrations": [
+        "src/migrations/**/*.{ts,js}"
+    ],
+    "cli": {
+        "entitiesDir": "src/modules",
+        "migrationsDir": "src/migrations"
+    }
   }

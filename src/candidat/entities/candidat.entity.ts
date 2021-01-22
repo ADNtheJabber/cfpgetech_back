@@ -1,6 +1,7 @@
 import { Adresse } from "src/adresse/entities/adresse.entity";
+import { Candidature } from "src/candidature/entities/candidature.entity";
 import { Profil } from "src/profil/entities/profil.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('candidat')
 export class Candidat {
@@ -43,8 +44,22 @@ export class Candidat {
     })
     telephone:String;
 
+    @Column('varchar',{
+        nullable: false,
+        name: 'genre'
+    })
+    genre:String;
+
     @ManyToOne(type => Adresse, adresse => adresse.id)
     adresse: Adresse;
+    
+    @ManyToMany(type => Candidature, { cascade: true })
+    @JoinTable({
+    name: 'candidature_use_candidat',
+    joinColumn: { name: 'id', referencedColumnName: 'id'},
+    inverseJoinColumn: { name: 'id', referencedColumnName: 'id'},
+    })
+    candidatures: Candidature[];
 
     @ManyToOne(type => Profil, profil => profil.id)
     profil: Profil;

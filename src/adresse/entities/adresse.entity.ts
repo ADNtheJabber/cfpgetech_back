@@ -1,6 +1,8 @@
+import { Administrateur } from "src/administrateur/entities/administrateur.entity";
 import { Candidat } from "src/candidat/entities/candidat.entity";
-import { Column, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
+@Entity('adresse')
 export class Adresse {
     @PrimaryGeneratedColumn({
         type: 'int',
@@ -23,4 +25,8 @@ export class Adresse {
     @OneToMany(type => Candidat, candidat => candidat.id)
     @JoinColumn({name: "id"})   
     candidat: Candidat;
+
+    @OneToMany(type => Administrateur, administrateur => administrateur.id)
+    @JoinColumn({name: "id"})   
+    administrateur: Administrateur;
 }
