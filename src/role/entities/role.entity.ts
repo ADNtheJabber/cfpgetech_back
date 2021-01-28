@@ -1,5 +1,6 @@
+import { type } from "os";
 import { User } from "src/users/entities/user.entity";
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('role')
 export class Role {
@@ -12,11 +13,6 @@ export class Role {
     @Column({ length: 50 })
     libelle:string;
     
-    @ManyToMany(type => User, { cascade: true })
-    @JoinTable({
-    name: 'user_use_role',
-    joinColumn: { name: 'id', referencedColumnName: 'id'},
-    inverseJoinColumn: { name: 'id', referencedColumnName: 'id'},
-    })
+    @OneToOne(type => User, user => user.id )
     users: User[];
 }

@@ -1,5 +1,7 @@
+import { Administrateur } from 'src/administrateur/entities/administrateur.entity';
+import { Candidat } from 'src/candidat/entities/candidat.entity';
 import { Role } from 'src/role/entities/role.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable, OneToOne } from 'typeorm';
 
 @Entity('user')
 export class User {
@@ -13,14 +15,15 @@ export class User {
     @Column({ length: 50}) 
     password:string;
 
-    @ManyToMany(type => Role, { cascade: true })
-    @JoinTable({
-    name: 'role_use_user',
-    joinColumn: { name: 'id', referencedColumnName: 'id'},
-    inverseJoinColumn: { name: 'id', referencedColumnName: 'id'},
-    })
-    roles: Role[];
+    @OneToOne(type => Administrateur, administrateur => administrateur.id)
+    administrateur: Administrateur;
 
+    @OneToOne(type => Candidat, candidat => candidat.id)
+    candidat: Candidat;
+
+    @OneToOne(type => Role, role => role.id)
+    role: Role;
+    
     @Column() 
     isActive:boolean;
 }

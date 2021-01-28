@@ -1,29 +1,146 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, Like } from 'typeorm';
+import { Observable, from, throwError } from 'rxjs';
+import { switchMap, map, catchError } from 'rxjs/operators';
+import { AuthService } from 'src/auth/services/auth.service';
+import { paginate, Pagination, IPaginationOptions } from 'nestjs-typeorm-paginate';
 import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  private readonly users: User
+    constructor(
+      @InjectRepository(User) 
+      private readonly userRepository: Repository<User>,
+      private authService: AuthService
+    ) {}
 
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  create(user: User){
+      return this.authService.hashPassword(user.password).pipe(
+          switchMap((passwordHash: string) => {
+              const newUser = new User();
+              newUser.email = user.email;
+              newUser.password = passwordHash;
+              newUser.role.id = user.role.id;
+              newUser.isActive = true;
+              
+              return from(this.userRepository.save(newUser)).pipe(
+                  map((user: User) => {
+                      const {password, ...result} = user;
+                      return result;
+                  }),
+                  catchError(err => throwError(err))
+              )
+          })
+      )
   }
 
-  findAll() {
-    return `This action returns all users`;
+  findOne(id: number) {
+      return from(this.userRepository.findOne({id}, {relations: ['role', 'candidat','administrateur']})).pipe(
+          map((user: User) => {
+              const {password, ...result} = user;
+              return result;
+          } )
+      )
   }
 
-  async findOne(username: string): Promise<User | undefined> {
-    return this.users.find(user => user.username === username);
+  findAll(): Observable<User[]> {
+      return from(this.userRepository.find()).pipe(
+          map((users: User[]) => {
+              users.forEach(function (v) {delete v.password});
+              return users;
+          })
+      );
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  paginate(options: IPaginationOptions): Observable<Pagination<User>> {
+      return from(paginate<User>(this.userRepository, options)).pipe(
+          map((usersPageable: Pagination<User>) => {
+              usersPageable.items.forEach(function (v) {delete v.password});
+              return usersPageable;
+          })
+      )
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+//   paginateFilterByEmail(options: IPaginationOptions): Observable<Pagination<User>>{
+//       return from(this.userRepository.findAndCount({
+//           skip: number(options.page * options.limit) || 0,
+//           take: options.limit || 10,
+//           order: {id: "ASC"},
+//           select: ['id', 'username', 'email', 'role'],
+//           where: [
+//               { email: Like(`%${user.email}%`)}
+//           ]
+//       })).pipe(
+//           map(([users, totalUsers]) => {
+//               const usersPageable: Pagination<User> = {
+//                   items: users,
+//                   links: {
+//                       first: options.route + `?limit=${options.limit}`,
+//                       previous: options.route + ``,
+//                       next: options.route + `?limit=${options.limit}&page=${options.page +1}`,
+//                       last: options.route + `?limit=${options.limit}&page=${Math.ceil(totalUsers / options.limit)}`
+//                   },
+//                   meta: {
+//                       currentPage: options.page,
+//                       itemCount: users.length,
+//                       itemsPerPage: options.limit,
+//                       totalItems: totalUsers,
+//                       totalPages: Math.ceil(totalUsers / options.limit)
+//                   }
+//               };              
+//               return usersPageable;
+//           })
+//       )
+//   }
+
+  deleteOne(id: number): Observable<any> {
+      return from(this.userRepository.delete(id));
+  }
+
+  updateOne(id: number, user: User): Observable<any> {
+      delete user.email;
+      delete user.password;
+      delete user.role;
+
+      return from(this.userRepository.update(id, user)).pipe(
+          switchMap(() => this.findOne(id))
+      );
+  }
+
+  updateRoleOfUser(id: number, user: User): Observable<any> {
+      return from(this.userRepository.update(id, user));
+  }
+
+  login(user: User): Observable<string> {
+      return this.validateUser(user.email, user.password).pipe(
+          switchMap((user: User) => {
+              if(user) {
+                  return this.authService.generateJWT(user).pipe(map((jwt: string) => jwt));
+              } else {
+                  return 'Wrong Credentials';
+              }
+          })
+      )
+  }
+
+  validateUser(email: string, password: string): Observable<any> {
+      return from(this.userRepository.findOne({email}, {select: ['id', 'password', 'email', 'role']})).pipe(
+          switchMap((user: User) => this.authService.comparePasswords(password, user.password).pipe(
+              map((match: boolean) => {
+                  if(match) {
+                      const {password, ...result} = user;
+                      return result;
+                  } else {
+                      throw Error;
+                  }
+              })
+          ))
+      )
+
+  }
+
+  findByMail(email: string): Observable<User> {
+      return from(this.userRepository.findOne({email}));
   }
 }

@@ -1,7 +1,8 @@
 import { Adresse } from "src/adresse/entities/adresse.entity";
 import { Candidature } from "src/candidature/entities/candidature.entity";
 import { Profil } from "src/profil/entities/profil.entity";
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { User } from "src/users/entities/user.entity";
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('candidat')
 export class Candidat {
@@ -63,4 +64,7 @@ export class Candidat {
 
     @ManyToOne(type => Profil, profil => profil.id)
     profil: Profil;
+
+    @OneToOne(type => User, user => user.id)
+    user: User;
 }

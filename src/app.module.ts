@@ -14,6 +14,8 @@ import { AdresseModule } from './adresse/adresse.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { AuthModule } from './auth/auth.module';
+import { FaqModule } from './faq/faq.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -27,7 +29,10 @@ import { AuthModule } from './auth/auth.module';
     ProfilModule, 
     AdministrateurModule, 
     RoleModule, 
-    AdresseModule, AuthModule, 
+    AdresseModule, 
+    AuthModule, 
+    FaqModule,
+    ConfigModule 
     ],
   controllers: [AppController],
   providers: [AppService],
